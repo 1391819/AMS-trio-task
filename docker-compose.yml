@@ -1,40 +1,42 @@
 version: "3.8"
 services:
-  nginx-trio-task:
+  nginx:
     image: nginx:alpine
-    build: nginx/
     ports:
       - target: 80
         published: 80
     networks:
-      - trio-task-network
+      - trio-net
     volumes:
       - type: bind
-        source: nginx/nginx.conf
+        source: ./nginx/nginx.conf
         target: /etc/nginx/nginx.conf
     depends_on:
       - flask-app
   flask-app:
     image: 1391819/trio-app:v2
-    build: flask-app/ 
+    build: ./flask-app/
     networks:
-      - trio-task-network
+      - trio-net
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 3
     depends_on:
       - mysql
   mysql:
-    image: 1391819/trio-db:v1
-    build: db/
+    image: 1391819/trio-db:${version}
+    build: ./db/
     networks:
-      - trio-task-network
+      - trio-net
     volumes:
       - type: volume
-        source: trio-task-volume
+        source: trio-volume
         target: /var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
 networks:
-  trio-task-network:
+  trio-net:
+    driver: overlay
 volumes:
-  trio-task-volume:
+  trio-volume:
